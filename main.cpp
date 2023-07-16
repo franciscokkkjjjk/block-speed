@@ -1,0 +1,179 @@
+#include "raylib.h"
+#include <math.h>
+#define MAX_BULDING_VALUE 500
+#define DEBUG 1
+
+const int largura_Window = 800;
+const int altura_window = 450;
+const int playerTam = 100;
+const float initPositionX = -6000.0f;
+
+
+int main(){
+  InitWindow(largura_Window, altura_window, "Camera Speed");
+  //posição inicial do playe em y
+  float initPlayeY = altura_window/2;
+  //posição inicial do playe em x
+  float initPlayeX = initPositionX;
+  SetTargetFPS(60);
+  //Desenha um retangulo para o player
+  Rectangle player = { initPlayeX, initPlayeY, playerTam, playerTam };
+  //Cria varios retangulos para o fundo
+  Rectangle buildings[MAX_BULDING_VALUE] = { 0 };
+  
+  //Config do retangulo
+  const int width_retangulo = 150;
+  const int height_retangulo = 250; 
+  const int position_rent_y = (height_retangulo+playerTam)-(altura_window/2);
+
+  //Cria varios retangulos de ostaculos
+  Rectangle *obstacules;
+  int num_obstacules_jump = 0;
+  int score_obstacule = 0;
+  const int num_def_obstacules_rend = 20;
+  Color *obstacules_colors;
+
+  // Cria cores para o fundo
+  Color buildColors[MAX_BULDING_VALUE] = { 0 };
+  // espaço entre os retangulos do fundo 
+  int spacing = 0;
+  //Velocidade do player dependendo da camera
+  float speed = 0;
+  //Verifica se pulou
+  bool jump = false;
+  float jumpTimer = 0.001f;
+  bool fallJump = false;
+  // Cria 100 retangulos para o fundo com valores aleatorios 
+  for (int i = 0; i < MAX_BULDING_VALUE; i++) {
+        buildings[i].width = (float)GetRandomValue(50, 200);
+        buildings[i].height = (float)GetRandomValue(100, largura_Window);
+        buildings[i].y = altura_window - 130.0f - buildings[i].height;
+        buildings[i].x = initPositionX + spacing;
+
+        spacing += (int)buildings[i].width;
+
+        buildColors[i] = (Color){ GetRandomValue(200, 240), GetRandomValue(200, 240), GetRandomValue(200, 250), 255 };
+    }
+    
+  
+  obstacules = (Rectangle *)MemAlloc(sizeof(Rectangle)*num_def_obstacules_rend);
+  
+  obstacules_colors = (Color *)MemAlloc(sizeof(Color)*num_def_obstacules_rend);
+
+  obstacules[0] = {(float)GetRandomValue(abs(initPlayeX+500), abs(initPlayeY+800)), position_rent_y, width_retangulo, height_retangulo};
+  obstacules_colors[0] = (Color){GetRandomValue(125, 200), GetRandomValue(100, 200), GetRandomValue(100, 150), 255};
+
+  for(int i = 1; i < num_def_obstacules_rend; ++i) {
+    obstacules[i] = {(float)GetRandomValue(abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)+600)), position_rent_y, width_retangulo, height_retangulo};
+    obstacules_colors[i] = (Color){GetRandomValue(125, 200), GetRandomValue(100, 200), GetRandomValue(100, 150), 255};
+  }
+
+  Camera2D camera = { 0 };
+  camera.target = (Vector2){ player.x + (float)(playerTam/2), player.y + (float)playerTam/2 };
+  camera.offset = (Vector2){ largura_Window/2.0f, altura_window/2.0f };
+  camera.rotation = 0.0f;
+  camera.zoom = 1.0f;
+  
+  while (!WindowShouldClose()){ 
+    if(num_def_obstacules_rend < num_obstacules_jump)  { 
+        num_obstacules_jump = 10;
+    // ----------------------------------- REVER --------------------------------
+      obstacules[0] = {(float)GetRandomValue(abs(obstacules[19].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[19].x+width_retangulo+(width_retangulo*0.9f)+600)), position_rent_y, width_retangulo, height_retangulo};
+      for(int i = 1; i < num_def_obstacules_rend/2; ++i)
+        obstacules[i] = {(float)GetRandomValue(abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)+600)), position_rent_y, width_retangulo, height_retangulo};
+          
+    }
+        
+    for(int i = 0; i < num_def_obstacules_rend; ++i) if(player.x > obstacules[i].x+width_retangulo+20 && !jump) {
+      num_obstacules_jump += 1;
+      score_obstacule += num_obstacules_jump;
+    }
+
+    camera.target = (Vector2){player.x + (float)(playerTam/2), player.y + (float)playerTam/2};
+
+    camera.zoom += (float)GetMouseWheelMove()*0.05f;
+    
+    if(camera.zoom > 3.0f) camera.zoom = 3.0f;
+    else if(camera.zoom < 0.1f) camera.zoom = 0.1f; 
+    // if(!jump)
+      speed = camera.rotation;
+
+    player.x += speed;
+    
+    if(IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  {
+      camera.rotation += 0.5f;
+    } 
+
+    if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT))  {
+      camera.rotation -= 0.5f;
+    }
+    if(IsKeyPressed(KEY_SPACE) && !jump) {
+      jump = true;
+      player.y = playerTam+1;
+    }
+    // fallJump = true;
+    if(jump && fallJump) player.y += playerTam*0.09;
+    
+    if(jump && !fallJump) {
+         if(jumpTimer >= ((initPlayeY*2)-playerTam)) {
+            fallJump = true;
+            continue;
+         }
+        
+        jumpTimer += playerTam*0.09;
+        player.y -= playerTam*0.09;
+    }
+
+    if(player.y >= initPlayeY) {
+      jump = false;
+      fallJump = false;
+      player.y = initPlayeY;
+      jumpTimer = 0;
+    }
+
+    if(camera.rotation > 30.0f) camera.rotation = 30.0f;
+    else if(camera.rotation < -30.0f) camera.rotation = -30.0f;    
+
+    if(player.x < initPositionX) player.x = initPositionX;
+    
+    BeginDrawing();
+      ClearBackground(BLACK);
+
+      BeginMode2D(camera);
+          //Gera o chão
+          DrawRectangle(initPositionX, 320, MAX_BULDING_VALUE*10000, 8000, DARKGRAY);
+          //Parede que impede o usuario de ir alem do limite (ilusão)
+          DrawRectangle((-6000+initPositionX), -12000, 6000, 16150, DARKGRAY);
+          
+          
+          for (int i = 0; i < MAX_BULDING_VALUE; i++) DrawRectangleRec(buildings[i], buildColors[i]);
+
+          for(int i = 0; i < num_def_obstacules_rend; ++i) DrawRectangleRec(obstacules[i], obstacules_colors[i]);
+
+          DrawRectangleRec(player, GetColor(0xff0000ff));
+      EndMode2D();
+      for(int i = 0; i < num_def_obstacules_rend; ++i) if(CheckCollisionRecs(player, obstacules[i])) {
+          DrawText(TextFormat("O retangulo %d bateu.", i), 400, 10, 20, RED);
+          player.x = obstacules[i].x;
+      }
+      DrawText(TextFormat("Score: %d", score_obstacule), 25, 5, 20, GREEN);
+      #if DEBUG == 1
+        DrawText(TextFormat("ZOOM: %g", camera.zoom), 25, 25, 20, RED);
+        DrawText(TextFormat("JUMPTIMER %g", initPlayeY-jumpTimer), 25, 65, 20, RED);
+        DrawText(TextFormat("Tela %g", initPlayeY), 25, 85, 20, RED);
+        DrawText(TextFormat("Rotacao: %g", camera.rotation), 25, 45, 20, RED);
+        for(int i = 0; i < num_def_obstacules_rend; ++i) DrawText(TextFormat("Obstaculo %d X: %f, Y: %f", i, obstacules[i].x, obstacules[i].y), 25, 110+(i*10), 5, RED);
+        DrawText(TextFormat("FPS: %d", GetFPS()), 650, 40, 20, RED);
+      #endif
+
+    EndDrawing();
+  }
+  
+  MemFree(obstacules);
+
+  MemFree(obstacules_colors);
+
+  CloseWindow();
+  
+  return 0;
+}
