@@ -81,7 +81,7 @@ int main(){
   camera.offset = (Vector2){ largura_Window/2.0f, altura_window/2.0f };
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
-  game_over = true;
+
   while (!WindowShouldClose()){ 
     if(game_over) {
       BeginDrawing();
@@ -121,11 +121,7 @@ int main(){
         obstacules[i] = {(float)GetRandomValue(abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[i-1].x+width_retangulo+(width_retangulo*2.0f)+600)), position_rent_y, width_retangulo, height_retangulo};
       num_obstacules_jump = 0;
     }
-    /*
-      Gera todos os obstaculos
-      Pega todos os 20 primeiros e define as posições dele quando passa todos os vinte pega esses vinte e joga pra depois dos outrso vinte usuado a 40 posição como inspiração, depois que passou do quarenta pega os vinte primeiro de emplo e taca pra frente
-
-    */
+  
     if(num_obstacules_jump >= num_def_obstacules_rend/2 && num_obstacules_jump < num_def_obstacules_rend/2+2) {
         obstacules[0] = {(float)GetRandomValue(abs(obstacules[num_def_obstacules_rend-1].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[num_def_obstacules_rend-1].x+width_retangulo+(width_retangulo*0.9f)+600)), position_rent_y, width_retangulo, height_retangulo};
         for(int i = 1; i < num_def_obstacules_rend/2; ++i) obstacules[i] = {(float)GetRandomValue(abs(obstacules[i-1].x+width_retangulo+(width_retangulo*0.9f)), abs(obstacules[i-1].x+width_retangulo+(width_retangulo*2.0f)+600)), position_rent_y, width_retangulo, height_retangulo};      
